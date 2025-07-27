@@ -59,7 +59,7 @@ export class WhatsAppController {
         res.sendStatus(403);
       }
     } catch (error) {
-      logger.error('Error verifying WhatsApp webhook:', error);
+      logger.error('Error verifying WhatsApp webhook: ', error);
       res.sendStatus(500);
     }
   }
