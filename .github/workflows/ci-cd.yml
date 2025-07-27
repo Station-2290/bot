@@ -16,7 +16,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/bot
+  IMAGE_NAME: station-2290/bot
 
 jobs:
   test:
