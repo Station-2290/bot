@@ -40,7 +40,7 @@ export class WhatsAppController {
 
       res.sendStatus(200);
     } catch (error) {
-      logger.error('Error handling WhatsApp webhook:', error);
+      logger.error('Error in handling WhatsApp webhook:', error);
       res.sendStatus(500);
     }
   }
