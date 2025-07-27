@@ -1,0 +1,4769 @@
+{
+	"openapi": "3.0.0",
+	"paths": {
+		"/api/auth/register": {
+			"post": {
+				"description": "Creates new user account with EMPLOYEE role by default. Returns access token in response body with refresh token as HTTP-only cookie. Only admins can change user roles via PATCH /users/:id/role",
+				"operationId": "AuthController_register",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/RegisterDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "User successfully registered. Refresh token is set as HTTP-only cookie.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AuthResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "User with this email or username already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Register a new user",
+				"tags": [
+					"auth"
+				]
+			}
+		},
+		"/api/auth/login": {
+			"post": {
+				"description": "Returns access token in response body and sets refresh token as HTTP-only cookie",
+				"operationId": "AuthController_login",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/LoginDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Successfully logged in. Refresh token is set as HTTP-only cookie.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AuthResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid credentials",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Login with username/email and password",
+				"tags": [
+					"auth"
+				]
+			}
+		},
+		"/api/auth/refresh": {
+			"post": {
+				"description": "Reads refresh token from HTTP-only cookie and returns new access token with updated refresh token cookie",
+				"operationId": "AuthController_refreshToken",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "Token successfully refreshed. New refresh token is set as HTTP-only cookie.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TokenResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid refresh token",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"summary": "Refresh access token using refresh token",
+				"tags": [
+					"auth"
+				]
+			}
+		},
+		"/api/auth/logout": {
+			"post": {
+				"description": "Invalidates all user tokens and clears refresh token cookie",
+				"operationId": "AuthController_logout",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "Successfully logged out",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Logout and invalidate tokens",
+				"tags": [
+					"auth"
+				]
+			}
+		},
+		"/api/auth/me": {
+			"post": {
+				"operationId": "AuthController_getProfile",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "User information retrieved",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get current user information",
+				"tags": [
+					"auth"
+				]
+			}
+		},
+		"/api/users": {
+			"post": {
+				"operationId": "UsersController_create",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateUserDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "User created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "User with this email or username already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Create a new user (Admin only)",
+				"tags": [
+					"users"
+				]
+			},
+			"get": {
+				"operationId": "UsersController_findAll",
+				"parameters": [
+					{
+						"name": "page",
+						"required": false,
+						"in": "query",
+						"description": "Page number",
+						"schema": {
+							"minimum": 1,
+							"default": 1,
+							"example": 1,
+							"type": "number"
+						}
+					},
+					{
+						"name": "limit",
+						"required": false,
+						"in": "query",
+						"description": "Number of items per page",
+						"schema": {
+							"minimum": 1,
+							"maximum": 100,
+							"default": 10,
+							"example": 10,
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns paginated list of users",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PaginatedUsersResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get all users with pagination",
+				"tags": [
+					"users"
+				]
+			}
+		},
+		"/api/users/me": {
+			"get": {
+				"operationId": "UsersController_getProfile",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "Returns current user information",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get current user profile",
+				"tags": [
+					"users"
+				]
+			},
+			"patch": {
+				"operationId": "UsersController_updateProfile",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateUserDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "User with this email or username already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update current user profile",
+				"tags": [
+					"users"
+				]
+			}
+		},
+		"/api/users/{id}": {
+			"get": {
+				"operationId": "UsersController_findOne",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "User ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns user information",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get user by ID",
+				"tags": [
+					"users"
+				]
+			},
+			"patch": {
+				"operationId": "UsersController_update",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "User ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateUserDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "User with this email or username already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update user by ID (Admin only)",
+				"tags": [
+					"users"
+				]
+			},
+			"delete": {
+				"operationId": "UsersController_remove",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "User ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "User deleted successfully"
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Cannot delete user with associated data",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Delete user by ID (Admin only)",
+				"tags": [
+					"users"
+				]
+			}
+		},
+		"/api/users/me/change-password": {
+			"post": {
+				"operationId": "UsersController_changePassword",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangePasswordDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Password changed successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageResponseDto"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Current password is incorrect",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Change current user password",
+				"tags": [
+					"users"
+				]
+			}
+		},
+		"/api/users/{id}/role": {
+			"patch": {
+				"operationId": "UsersController_changeRole",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "User ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ChangeRoleDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "User role changed successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Change user role (Admin only)",
+				"tags": [
+					"users"
+				]
+			}
+		},
+		"/api/users/{id}/toggle-status": {
+			"post": {
+				"operationId": "UsersController_toggleStatus",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "User ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "User status toggled successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "User not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Toggle user active status (Admin only)",
+				"tags": [
+					"users"
+				]
+			}
+		},
+		"/api/api-keys": {
+			"post": {
+				"operationId": "ApiKeysController_create",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateApiKeyDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "API key created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiKeyResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Create a new API key",
+				"tags": [
+					"api-keys"
+				]
+			},
+			"get": {
+				"operationId": "ApiKeysController_findAll",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "List of API keys",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiKeyListResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get all API keys for the current user",
+				"tags": [
+					"api-keys"
+				]
+			}
+		},
+		"/api/api-keys/{id}": {
+			"get": {
+				"operationId": "ApiKeysController_findOne",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "API key ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "API key details",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiKeyResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "API key not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get a specific API key",
+				"tags": [
+					"api-keys"
+				]
+			},
+			"patch": {
+				"operationId": "ApiKeysController_update",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "API key ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateApiKeyDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "API key updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ApiKeyResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "API key not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update an API key",
+				"tags": [
+					"api-keys"
+				]
+			},
+			"delete": {
+				"operationId": "ApiKeysController_remove",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "API key ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "API key deleted successfully"
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "API key not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Delete an API key",
+				"tags": [
+					"api-keys"
+				]
+			}
+		},
+		"/api/api-keys/{id}/revoke": {
+			"post": {
+				"operationId": "ApiKeysController_revoke",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"description": "API key ID",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "API key revoked successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/MessageResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "API key not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Revoke an API key",
+				"tags": [
+					"api-keys"
+				]
+			}
+		},
+		"/api/v1/products": {
+			"post": {
+				"operationId": "ProductsController_create",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateProductDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Product created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Product"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Product with this SKU already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Create a new product",
+				"tags": [
+					"products"
+				]
+			},
+			"get": {
+				"operationId": "ProductsController_findAll",
+				"parameters": [
+					{
+						"name": "page",
+						"required": false,
+						"in": "query",
+						"description": "Page number",
+						"schema": {
+							"minimum": 1,
+							"default": 1,
+							"example": 1,
+							"type": "number"
+						}
+					},
+					{
+						"name": "limit",
+						"required": false,
+						"in": "query",
+						"description": "Number of items per page",
+						"schema": {
+							"minimum": 1,
+							"maximum": 100,
+							"default": 10,
+							"example": 10,
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns paginated list of products",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PaginatedProductsResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get all products with pagination",
+				"tags": [
+					"products"
+				]
+			}
+		},
+		"/api/v1/products/{id}": {
+			"get": {
+				"operationId": "ProductsController_findOne",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns product by id",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Product"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Product not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get product by ID",
+				"tags": [
+					"products"
+				]
+			},
+			"patch": {
+				"operationId": "ProductsController_update",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateProductDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Returns updated product",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Product"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Product not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Product with this SKU already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update product by ID",
+				"tags": [
+					"products"
+				]
+			},
+			"delete": {
+				"operationId": "ProductsController_remove",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Product deleted successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Product"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Product not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Cannot delete product with existing orders",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Delete product by ID",
+				"tags": [
+					"products"
+				]
+			}
+		},
+		"/api/v1/categories": {
+			"post": {
+				"operationId": "CategoriesController_create",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateCategoryDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Category created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Category"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Category with this name or slug already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Create a new category",
+				"tags": [
+					"categories"
+				]
+			},
+			"get": {
+				"operationId": "CategoriesController_find_all",
+				"parameters": [
+					{
+						"name": "page",
+						"required": false,
+						"in": "query",
+						"description": "Page number",
+						"schema": {
+							"minimum": 1,
+							"default": 1,
+							"example": 1,
+							"type": "number"
+						}
+					},
+					{
+						"name": "limit",
+						"required": false,
+						"in": "query",
+						"description": "Number of items per page",
+						"schema": {
+							"minimum": 1,
+							"maximum": 100,
+							"default": 10,
+							"example": 10,
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns paginated list of categories",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PaginatedCategoriesResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get all categories with pagination",
+				"tags": [
+					"categories"
+				]
+			}
+		},
+		"/api/v1/categories/{id}": {
+			"get": {
+				"operationId": "CategoriesController_find_one",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns category with products",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Category"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Category not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get category by ID",
+				"tags": [
+					"categories"
+				]
+			},
+			"patch": {
+				"operationId": "CategoriesController_update",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateCategoryDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Returns updated category",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Category"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Category not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Category with this name or slug already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update category by ID",
+				"tags": [
+					"categories"
+				]
+			},
+			"delete": {
+				"operationId": "CategoriesController_remove",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Category deleted successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Category"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Category not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Cannot delete category with products",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Delete category by ID",
+				"tags": [
+					"categories"
+				]
+			}
+		},
+		"/api/v1/customers": {
+			"post": {
+				"operationId": "CustomersController_create",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateCustomerDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Customer created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Customer"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Customer with this email already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Create a new customer",
+				"tags": [
+					"customers"
+				]
+			},
+			"get": {
+				"operationId": "CustomersController_find_all",
+				"parameters": [
+					{
+						"name": "page",
+						"required": false,
+						"in": "query",
+						"description": "Page number",
+						"schema": {
+							"minimum": 1,
+							"default": 1,
+							"example": 1,
+							"type": "number"
+						}
+					},
+					{
+						"name": "limit",
+						"required": false,
+						"in": "query",
+						"description": "Number of items per page",
+						"schema": {
+							"minimum": 1,
+							"maximum": 100,
+							"default": 10,
+							"example": 10,
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns paginated list of customers",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PaginatedCustomersResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get all customers with pagination",
+				"tags": [
+					"customers"
+				]
+			}
+		},
+		"/api/v1/customers/{id}": {
+			"get": {
+				"operationId": "CustomersController_find_one",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns customer with recent orders",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Customer"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Customer not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get customer by ID",
+				"tags": [
+					"customers"
+				]
+			},
+			"patch": {
+				"operationId": "CustomersController_update",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateCustomerDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Returns updated customer",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Customer"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Customer not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Customer with this email already exists",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update customer by ID",
+				"tags": [
+					"customers"
+				]
+			},
+			"delete": {
+				"operationId": "CustomersController_remove",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Customer deleted successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Customer"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Customer not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "Cannot delete customer with orders",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConflictErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Delete customer by ID",
+				"tags": [
+					"customers"
+				]
+			}
+		},
+		"/api/v1/orders": {
+			"post": {
+				"operationId": "OrdersController_create",
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateOrderDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"201": {
+						"description": "Order created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Order"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid product or insufficient stock",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Create a new order",
+				"tags": [
+					"orders"
+				]
+			},
+			"get": {
+				"operationId": "OrdersController_find_all",
+				"parameters": [
+					{
+						"name": "page",
+						"required": false,
+						"in": "query",
+						"description": "Page number",
+						"schema": {
+							"minimum": 1,
+							"default": 1,
+							"example": 1,
+							"type": "number"
+						}
+					},
+					{
+						"name": "limit",
+						"required": false,
+						"in": "query",
+						"description": "Number of items per page",
+						"schema": {
+							"minimum": 1,
+							"maximum": 100,
+							"default": 10,
+							"example": 10,
+							"type": "number"
+						}
+					},
+					{
+						"name": "status",
+						"required": false,
+						"in": "query",
+						"description": "Filter by order status",
+						"schema": {
+							"enum": [
+								"PENDING",
+								"CONFIRMED",
+								"PREPARING",
+								"READY",
+								"COMPLETED",
+								"CANCELLED"
+							],
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns paginated list of orders",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/PaginatedOrdersResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get all orders with pagination",
+				"tags": [
+					"orders"
+				]
+			}
+		},
+		"/api/v1/orders/{id}": {
+			"get": {
+				"operationId": "OrdersController_find_one",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Returns order with details",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Order"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Order not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Get order by ID",
+				"tags": [
+					"orders"
+				]
+			},
+			"patch": {
+				"operationId": "OrdersController_update",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateOrderDto"
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Returns updated order",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Order"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid status transition",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Order not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"422": {
+						"description": "Validation failed",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ValidationErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Update order status or notes",
+				"tags": [
+					"orders"
+				]
+			}
+		},
+		"/api/v1/orders/{id}/cancel": {
+			"post": {
+				"operationId": "OrdersController_cancel",
+				"parameters": [
+					{
+						"name": "id",
+						"required": true,
+						"in": "path",
+						"schema": {
+							"type": "number"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Order cancelled successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Order"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Cannot cancel order in current status",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized access",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/UnauthorizedErrorResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Insufficient permissions",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ForbiddenErrorResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Order not found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundErrorResponseDto"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/InternalServerErrorResponseDto"
+								}
+							}
+						}
+					}
+				},
+				"security": [
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Cancel an order",
+				"tags": [
+					"orders"
+				]
+			}
+		},
+		"/api/v1/events/orders": {
+			"get": {
+				"description": "Real-time order notifications for tablet display. Requires JWT token as query parameter (?token=your_jwt_token) or API key header.",
+				"operationId": "EventsController_order_events",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "Event stream established",
+						"content": {
+							"text/event-stream": {
+								"schema": {
+									"type": "string",
+									"example": "data: {\"type\":\"order_created\",\"order_id\":1,\"order_number\":\"ORD-20250125-0001\",\"status\":\"PENDING\",\"total_amount\":15.99,\"customer_name\":\"John Doe\",\"created_at\":\"2025-01-25T10:00:00Z\",\"updated_at\":\"2025-01-25T10:00:00Z\"}"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Unauthorized - API key or JWT token missing or invalid"
+					}
+				},
+				"security": [
+					{
+						"api-key": []
+					},
+					{
+						"JWT-auth": []
+					}
+				],
+				"summary": "Subscribe to order events via Server-Sent Events",
+				"tags": [
+					"events"
+				]
+			}
+		},
+		"/api/health": {
+			"get": {
+				"operationId": "HealthController_check",
+				"parameters": [],
+				"responses": {
+					"200": {
+						"description": "Service is healthy",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"status": {
+											"type": "string",
+											"example": "ok"
+										},
+										"timestamp": {
+											"type": "string",
+											"example": "2024-01-01T00:00:00.000Z"
+										},
+										"uptime": {
+											"type": "number",
+											"example": 123.456
+										},
+										"database": {
+											"type": "object",
+											"properties": {
+												"status": {
+													"type": "string",
+													"example": "connected"
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"summary": "Health check endpoint",
+				"tags": [
+					"health"
+				]
+			}
+		}
+	},
+	"info": {
+		"title": "Coffee Shop API",
+		"description": "RESTful API for managing a coffee shop including products, categories, customers, and orders.\n      \n      ## Features\n      - Product management with categories\n      - Customer management\n      - Order processing with status tracking\n      - Real-time order notifications via Server-Sent Events (SSE)\n      - Pagination support on all list endpoints\n      - Comprehensive error handling\n      - Request/response logging\n      \n      ## Authentication\n      The API supports JWT token authentication and API key authentication. \n      SSE endpoints require API key authentication for tablet access.\n      ",
+		"version": "1.0",
+		"contact": {}
+	},
+	"tags": [
+		{
+			"name": "health",
+			"description": "Health check endpoint"
+		},
+		{
+			"name": "categories",
+			"description": "Manage product categories"
+		},
+		{
+			"name": "products",
+			"description": "Manage coffee shop products"
+		},
+		{
+			"name": "customers",
+			"description": "Manage customer information"
+		},
+		{
+			"name": "orders",
+			"description": "Process and track orders"
+		},
+		{
+			"name": "auth",
+			"description": "Authentication endpoints"
+		},
+		{
+			"name": "users",
+			"description": "Manage users"
+		},
+		{
+			"name": "api-keys",
+			"description": "Manage API keys"
+		},
+		{
+			"name": "events",
+			"description": "Real-time order events via Server-Sent Events"
+		}
+	],
+	"servers": [],
+	"components": {
+		"securitySchemes": {
+			"JWT-auth": {
+				"scheme": "bearer",
+				"bearerFormat": "JWT",
+				"type": "http",
+				"description": "JWT token authentication"
+			},
+			"api-key": {
+				"type": "apiKey",
+				"in": "header",
+				"name": "X-API-Key",
+				"description": "API key authentication"
+			}
+		},
+		"schemas": {
+			"RegisterDto": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"type": "string",
+						"example": "user@example.com",
+						"description": "User email address"
+					},
+					"username": {
+						"type": "string",
+						"example": "johndoe",
+						"description": "Username for login",
+						"minLength": 3
+					},
+					"password": {
+						"type": "string",
+						"example": "SecurePassword123!",
+						"description": "User password (min 8 characters)",
+						"minLength": 8
+					}
+				},
+				"required": [
+					"email",
+					"username",
+					"password"
+				]
+			},
+			"UserInfoDto": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"description": "User ID",
+						"example": 1
+					},
+					"email": {
+						"type": "string",
+						"description": "User email",
+						"example": "user@example.com"
+					},
+					"username": {
+						"type": "string",
+						"description": "Username",
+						"example": "johndoe"
+					},
+					"role": {
+						"type": "string",
+						"description": "User role",
+						"enum": [
+							"ADMIN",
+							"MANAGER",
+							"EMPLOYEE",
+							"CUSTOMER"
+						],
+						"example": "EMPLOYEE"
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether user is active",
+						"example": true
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "User creation date",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "User last update date",
+						"example": "2024-01-01T00:00:00.000Z"
+					}
+				},
+				"required": [
+					"id",
+					"email",
+					"username",
+					"role",
+					"is_active",
+					"created_at",
+					"updated_at"
+				]
+			},
+			"AuthResponseDto": {
+				"type": "object",
+				"properties": {
+					"access_token": {
+						"type": "string",
+						"description": "JWT access token",
+						"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+					},
+					"token_type": {
+						"type": "string",
+						"description": "Token type",
+						"example": "Bearer"
+					},
+					"expires_in": {
+						"type": "number",
+						"description": "Token expiration time in seconds",
+						"example": 3600
+					},
+					"refresh_token_expires_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Refresh token expiration date (for frontend reference)",
+						"example": "2024-01-08T00:00:00.000Z"
+					},
+					"user": {
+						"description": "User information",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/UserInfoDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"access_token",
+					"token_type",
+					"refresh_token_expires_at",
+					"user"
+				]
+			},
+			"ConflictErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 409
+					},
+					"message": {
+						"type": "string",
+						"description": "Conflict error message",
+						"example": "Resource already exists"
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details",
+						"example": "Conflict"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/users"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"error",
+					"timestamp",
+					"path"
+				]
+			},
+			"ValidationErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 422
+					},
+					"message": {
+						"description": "Array of validation error messages",
+						"example": [
+							"email must be a valid email",
+							"password is too short"
+						],
+						"type": "array",
+						"items": {
+							"type": "string"
+						}
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details",
+						"example": "Unprocessable Entity"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/products"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"error",
+					"timestamp",
+					"path"
+				]
+			},
+			"InternalServerErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 500
+					},
+					"message": {
+						"type": "string",
+						"description": "Internal server error message",
+						"example": "Internal server error"
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details",
+						"example": "Internal Server Error"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/products"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"error",
+					"timestamp",
+					"path"
+				]
+			},
+			"LoginDto": {
+				"type": "object",
+				"properties": {
+					"username": {
+						"type": "string",
+						"example": "johndoe",
+						"description": "Username or email address"
+					},
+					"password": {
+						"type": "string",
+						"example": "SecurePassword123!",
+						"description": "User password"
+					}
+				},
+				"required": [
+					"username",
+					"password"
+				]
+			},
+			"UnauthorizedErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 401
+					},
+					"message": {
+						"type": "string",
+						"description": "Unauthorized access message",
+						"example": "Unauthorized"
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details",
+						"example": "Unauthorized"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/products"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"error",
+					"timestamp",
+					"path"
+				]
+			},
+			"TokenResponseDto": {
+				"type": "object",
+				"properties": {
+					"access_token": {
+						"type": "string",
+						"description": "New JWT access token",
+						"example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+					},
+					"token_type": {
+						"type": "string",
+						"description": "Token type",
+						"example": "Bearer"
+					},
+					"expires_in": {
+						"type": "number",
+						"description": "Token expiration time in seconds",
+						"example": 3600
+					},
+					"refresh_token_expires_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Refresh token expiration date (for frontend reference)",
+						"example": "2024-01-08T00:00:00.000Z"
+					},
+					"user": {
+						"description": "User information",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/UserInfoDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"access_token",
+					"token_type",
+					"refresh_token_expires_at",
+					"user"
+				]
+			},
+			"MessageResponseDto": {
+				"type": "object",
+				"properties": {
+					"message": {
+						"type": "string",
+						"description": "Success or status message",
+						"example": "Operation completed successfully"
+					}
+				},
+				"required": [
+					"message"
+				]
+			},
+			"User": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"example": 1,
+						"description": "User ID"
+					},
+					"email": {
+						"type": "string",
+						"example": "user@example.com",
+						"description": "User email address"
+					},
+					"username": {
+						"type": "string",
+						"example": "johndoe",
+						"description": "Username"
+					},
+					"role": {
+						"type": "string",
+						"enum": [
+							"ADMIN",
+							"MANAGER",
+							"EMPLOYEE",
+							"CUSTOMER"
+						],
+						"example": "EMPLOYEE",
+						"description": "User role"
+					},
+					"is_active": {
+						"type": "boolean",
+						"example": true,
+						"description": "Whether user is active"
+					},
+					"customer_id": {
+						"type": "object",
+						"example": 1,
+						"description": "Associated customer ID",
+						"nullable": true
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"example": "2024-01-01T00:00:00.000Z",
+						"description": "User creation timestamp"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"example": "2024-01-01T00:00:00.000Z",
+						"description": "User last update timestamp"
+					}
+				},
+				"required": [
+					"id",
+					"email",
+					"username",
+					"role",
+					"is_active",
+					"customer_id",
+					"created_at",
+					"updated_at"
+				]
+			},
+			"CreateUserDto": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"type": "string",
+						"example": "user@example.com",
+						"description": "User email address"
+					},
+					"username": {
+						"type": "string",
+						"example": "johndoe",
+						"description": "Username for login",
+						"minLength": 3
+					},
+					"password": {
+						"type": "string",
+						"example": "SecurePassword123!",
+						"description": "User password (min 8 characters)",
+						"minLength": 8
+					},
+					"role": {
+						"type": "string",
+						"enum": [
+							"ADMIN",
+							"MANAGER",
+							"EMPLOYEE",
+							"CUSTOMER"
+						],
+						"example": "EMPLOYEE",
+						"description": "User role",
+						"default": "EMPLOYEE"
+					},
+					"customer_id": {
+						"type": "number",
+						"example": 1,
+						"description": "Associated customer ID"
+					}
+				},
+				"required": [
+					"email",
+					"username",
+					"password"
+				]
+			},
+			"ForbiddenErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 403
+					},
+					"message": {
+						"type": "string",
+						"description": "Forbidden access message",
+						"example": "Forbidden resource"
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details",
+						"example": "Forbidden"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/admin/users"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"error",
+					"timestamp",
+					"path"
+				]
+			},
+			"PaginationMetaDto": {
+				"type": "object",
+				"properties": {
+					"page": {
+						"type": "number",
+						"description": "Current page number",
+						"example": 1
+					},
+					"limit": {
+						"type": "number",
+						"description": "Number of items per page",
+						"example": 10
+					},
+					"total": {
+						"type": "number",
+						"description": "Total number of items",
+						"example": 100
+					},
+					"total_pages": {
+						"type": "number",
+						"description": "Total number of pages",
+						"example": 10
+					},
+					"has_next_page": {
+						"type": "boolean",
+						"description": "Whether there is a next page",
+						"example": true
+					},
+					"has_previous_page": {
+						"type": "boolean",
+						"description": "Whether there is a previous page",
+						"example": false
+					}
+				},
+				"required": [
+					"page",
+					"limit",
+					"total",
+					"total_pages",
+					"has_next_page",
+					"has_previous_page"
+				]
+			},
+			"PaginatedUsersResponseDto": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"description": "Array of users",
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/User"
+						}
+					},
+					"meta": {
+						"description": "Pagination metadata",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaginationMetaDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"data",
+					"meta"
+				]
+			},
+			"NotFoundErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 404
+					},
+					"message": {
+						"type": "string",
+						"description": "Resource not found message",
+						"example": "Resource not found"
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details",
+						"example": "Not Found"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/products/999"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"error",
+					"timestamp",
+					"path"
+				]
+			},
+			"UpdateUserDto": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"type": "string",
+						"example": "user@example.com",
+						"description": "User email address"
+					},
+					"username": {
+						"type": "string",
+						"example": "johndoe",
+						"description": "Username for login",
+						"minLength": 3
+					},
+					"role": {
+						"type": "string",
+						"enum": [
+							"ADMIN",
+							"MANAGER",
+							"EMPLOYEE",
+							"CUSTOMER"
+						],
+						"example": "EMPLOYEE",
+						"description": "User role",
+						"default": "EMPLOYEE"
+					},
+					"customer_id": {
+						"type": "number",
+						"example": 1,
+						"description": "Associated customer ID"
+					}
+				}
+			},
+			"ChangePasswordDto": {
+				"type": "object",
+				"properties": {
+					"current_password": {
+						"type": "string",
+						"example": "CurrentPassword123!",
+						"description": "Current password"
+					},
+					"new_password": {
+						"type": "string",
+						"example": "NewPassword123!",
+						"description": "New password (min 8 characters)",
+						"minLength": 8
+					}
+				},
+				"required": [
+					"current_password",
+					"new_password"
+				]
+			},
+			"ErrorResponseDto": {
+				"type": "object",
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"description": "HTTP status code",
+						"example": 400
+					},
+					"message": {
+						"type": "string",
+						"description": "Error message",
+						"example": "Bad Request"
+					},
+					"error": {
+						"type": "string",
+						"description": "Error details or path",
+						"example": "/api/v1/products"
+					},
+					"timestamp": {
+						"type": "string",
+						"description": "Request timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"path": {
+						"type": "string",
+						"description": "Request path",
+						"example": "/api/v1/products"
+					}
+				},
+				"required": [
+					"statusCode",
+					"message",
+					"timestamp",
+					"path"
+				]
+			},
+			"ChangeRoleDto": {
+				"type": "object",
+				"properties": {
+					"role": {
+						"type": "string",
+						"enum": [
+							"ADMIN",
+							"MANAGER",
+							"EMPLOYEE",
+							"CUSTOMER"
+						],
+						"example": "MANAGER",
+						"description": "New role for the user"
+					}
+				},
+				"required": [
+					"role"
+				]
+			},
+			"CreateApiKeyDto": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"example": "Production API Key",
+						"description": "Name for the API key",
+						"minLength": 3
+					},
+					"expires_at": {
+						"type": "string",
+						"example": "2025-12-31T23:59:59Z",
+						"description": "Optional expiration date for the API key"
+					}
+				},
+				"required": [
+					"name"
+				]
+			},
+			"ApiKeyResponseDto": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"description": "API key ID",
+						"example": 1
+					},
+					"name": {
+						"type": "string",
+						"description": "API key name/description",
+						"example": "My API Key"
+					},
+					"key": {
+						"type": "string",
+						"description": "API key (only shown when created)",
+						"example": "ak_1234567890abcdef"
+					},
+					"key_prefix": {
+						"type": "string",
+						"description": "API key prefix for identification",
+						"example": "ak_123..."
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the API key is active",
+						"example": true
+					},
+					"user_id": {
+						"type": "number",
+						"description": "User ID who owns this API key",
+						"example": 1
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "API key creation date",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "API key last update date",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"last_used_at": {
+						"type": "object",
+						"description": "Last time the API key was used",
+						"example": "2024-01-01T00:00:00.000Z"
+					}
+				}
+			},
+			"ApiKeyListResponseDto": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"description": "List of API keys",
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/ApiKeyResponseDto"
+						}
+					},
+					"total": {
+						"type": "number",
+						"description": "Total count of API keys",
+						"example": 5
+					}
+				},
+				"required": [
+					"data",
+					"total"
+				]
+			},
+			"UpdateApiKeyDto": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"example": "Production API Key",
+						"description": "Name for the API key",
+						"minLength": 3
+					},
+					"expires_at": {
+						"type": "string",
+						"example": "2025-12-31T23:59:59Z",
+						"description": "Optional expiration date for the API key"
+					}
+				}
+			},
+			"CreateProductDto": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Product name",
+						"example": "Cappuccino"
+					},
+					"description": {
+						"type": "string",
+						"description": "Product description",
+						"example": "Classic Italian coffee with steamed milk foam"
+					},
+					"price": {
+						"type": "number",
+						"description": "Product price",
+						"example": 4.99
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the product is active",
+						"example": true,
+						"default": true
+					},
+					"volume_ml": {
+						"type": "object",
+						"description": "Volume in milliliters (for beverages)",
+						"example": 350,
+						"nullable": true
+					},
+					"is_promoted": {
+						"type": "boolean",
+						"description": "Whether the product is promoted",
+						"example": false,
+						"default": false
+					},
+					"sku": {
+						"type": "string",
+						"description": "Stock Keeping Unit",
+						"example": "COF-CAP-001"
+					},
+					"stock": {
+						"type": "number",
+						"description": "Available stock quantity",
+						"example": 100,
+						"default": 0
+					},
+					"image_url": {
+						"type": "object",
+						"description": "Product image URL",
+						"example": "https://example.com/images/cappuccino.jpg",
+						"nullable": true
+					},
+					"category_id": {
+						"type": "number",
+						"description": "Category ID",
+						"example": 1
+					}
+				},
+				"required": [
+					"name",
+					"description",
+					"price",
+					"is_active",
+					"is_promoted",
+					"sku",
+					"stock",
+					"category_id"
+				]
+			},
+			"Product": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"description": "Product ID",
+						"example": 1
+					},
+					"name": {
+						"type": "string",
+						"description": "Product name",
+						"example": "Cappuccino"
+					},
+					"description": {
+						"type": "string",
+						"description": "Product description",
+						"example": "Classic Italian coffee with steamed milk foam"
+					},
+					"price": {
+						"type": "number",
+						"description": "Product price",
+						"example": 4.99
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the product is active",
+						"example": true,
+						"default": true
+					},
+					"volume_ml": {
+						"type": "object",
+						"description": "Volume in milliliters (for beverages)",
+						"example": 350,
+						"nullable": true
+					},
+					"is_promoted": {
+						"type": "boolean",
+						"description": "Whether the product is promoted",
+						"example": false,
+						"default": false
+					},
+					"sku": {
+						"type": "string",
+						"description": "Stock Keeping Unit",
+						"example": "COF-CAP-001"
+					},
+					"stock": {
+						"type": "number",
+						"description": "Available stock quantity",
+						"example": 100,
+						"default": 0
+					},
+					"image_url": {
+						"type": "object",
+						"description": "Product image URL",
+						"example": "https://example.com/images/cappuccino.jpg",
+						"nullable": true
+					},
+					"category_id": {
+						"type": "number",
+						"description": "Category ID",
+						"example": 1
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Creation timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Last update timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"description",
+					"price",
+					"is_active",
+					"is_promoted",
+					"sku",
+					"stock",
+					"category_id",
+					"created_at",
+					"updated_at"
+				]
+			},
+			"PaginatedProductsResponseDto": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"description": "Array of products",
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Product"
+						}
+					},
+					"meta": {
+						"description": "Pagination metadata",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaginationMetaDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"data",
+					"meta"
+				]
+			},
+			"UpdateProductDto": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Product name",
+						"example": "Cappuccino"
+					},
+					"description": {
+						"type": "string",
+						"description": "Product description",
+						"example": "Classic Italian coffee with steamed milk foam"
+					},
+					"price": {
+						"type": "number",
+						"description": "Product price",
+						"example": 4.99
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the product is active",
+						"example": true,
+						"default": true
+					},
+					"volume_ml": {
+						"type": "object",
+						"description": "Volume in milliliters (for beverages)",
+						"example": 350,
+						"nullable": true
+					},
+					"is_promoted": {
+						"type": "boolean",
+						"description": "Whether the product is promoted",
+						"example": false,
+						"default": false
+					},
+					"sku": {
+						"type": "string",
+						"description": "Stock Keeping Unit",
+						"example": "COF-CAP-001"
+					},
+					"stock": {
+						"type": "number",
+						"description": "Available stock quantity",
+						"example": 100,
+						"default": 0
+					},
+					"image_url": {
+						"type": "object",
+						"description": "Product image URL",
+						"example": "https://example.com/images/cappuccino.jpg",
+						"nullable": true
+					},
+					"category_id": {
+						"type": "number",
+						"description": "Category ID",
+						"example": 1
+					}
+				}
+			},
+			"CreateCategoryDto": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Category name",
+						"example": "Hot Beverages"
+					},
+					"description": {
+						"type": "object",
+						"description": "Category description",
+						"example": "Coffee, tea, and other hot drinks",
+						"nullable": true
+					},
+					"slug": {
+						"type": "string",
+						"description": "URL-friendly slug",
+						"example": "hot-beverages"
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the category is active",
+						"example": true,
+						"default": true
+					},
+					"display_order": {
+						"type": "number",
+						"description": "Display order for sorting",
+						"example": 1,
+						"default": 0
+					}
+				},
+				"required": [
+					"name",
+					"description",
+					"slug",
+					"is_active",
+					"display_order"
+				]
+			},
+			"Category": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"description": "Category ID",
+						"example": 1
+					},
+					"name": {
+						"type": "string",
+						"description": "Category name",
+						"example": "Hot Beverages"
+					},
+					"description": {
+						"type": "object",
+						"description": "Category description",
+						"example": "Coffee, tea, and other hot drinks",
+						"nullable": true
+					},
+					"slug": {
+						"type": "string",
+						"description": "URL-friendly slug",
+						"example": "hot-beverages"
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the category is active",
+						"example": true,
+						"default": true
+					},
+					"display_order": {
+						"type": "number",
+						"description": "Display order for sorting",
+						"example": 1,
+						"default": 0
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Creation timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Last update timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"description",
+					"slug",
+					"is_active",
+					"display_order",
+					"created_at",
+					"updated_at"
+				]
+			},
+			"PaginatedCategoriesResponseDto": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"description": "Array of categories",
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Category"
+						}
+					},
+					"meta": {
+						"description": "Pagination metadata",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaginationMetaDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"data",
+					"meta"
+				]
+			},
+			"UpdateCategoryDto": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "Category name",
+						"example": "Hot Beverages"
+					},
+					"description": {
+						"type": "object",
+						"description": "Category description",
+						"example": "Coffee, tea, and other hot drinks",
+						"nullable": true
+					},
+					"slug": {
+						"type": "string",
+						"description": "URL-friendly slug",
+						"example": "hot-beverages"
+					},
+					"is_active": {
+						"type": "boolean",
+						"description": "Whether the category is active",
+						"example": true,
+						"default": true
+					},
+					"display_order": {
+						"type": "number",
+						"description": "Display order for sorting",
+						"example": 1,
+						"default": 0
+					}
+				}
+			},
+			"CreateCustomerDto": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"type": "string",
+						"description": "Customer email address",
+						"example": "john.doe@example.com"
+					},
+					"first_name": {
+						"type": "string",
+						"description": "Customer first name",
+						"example": "John"
+					},
+					"last_name": {
+						"type": "string",
+						"description": "Customer last name",
+						"example": "Doe"
+					},
+					"phone": {
+						"type": "object",
+						"description": "Customer phone number",
+						"example": "+1234567890",
+						"nullable": true
+					}
+				},
+				"required": [
+					"email",
+					"first_name",
+					"last_name"
+				]
+			},
+			"Customer": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"description": "Customer ID",
+						"example": 1
+					},
+					"email": {
+						"type": "string",
+						"description": "Customer email address",
+						"example": "john.doe@example.com"
+					},
+					"first_name": {
+						"type": "string",
+						"description": "Customer first name",
+						"example": "John"
+					},
+					"last_name": {
+						"type": "string",
+						"description": "Customer last name",
+						"example": "Doe"
+					},
+					"phone": {
+						"type": "object",
+						"description": "Customer phone number",
+						"example": "+1234567890",
+						"nullable": true
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Creation timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Last update timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					}
+				},
+				"required": [
+					"id",
+					"email",
+					"first_name",
+					"last_name",
+					"created_at",
+					"updated_at"
+				]
+			},
+			"PaginatedCustomersResponseDto": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"description": "Array of customers",
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Customer"
+						}
+					},
+					"meta": {
+						"description": "Pagination metadata",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaginationMetaDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"data",
+					"meta"
+				]
+			},
+			"UpdateCustomerDto": {
+				"type": "object",
+				"properties": {
+					"email": {
+						"type": "string",
+						"description": "Customer email address",
+						"example": "john.doe@example.com"
+					},
+					"first_name": {
+						"type": "string",
+						"description": "Customer first name",
+						"example": "John"
+					},
+					"last_name": {
+						"type": "string",
+						"description": "Customer last name",
+						"example": "Doe"
+					},
+					"phone": {
+						"type": "object",
+						"description": "Customer phone number",
+						"example": "+1234567890",
+						"nullable": true
+					}
+				}
+			},
+			"CreateOrderItemDto": {
+				"type": "object",
+				"properties": {
+					"product_id": {
+						"type": "number",
+						"description": "Product ID",
+						"example": 1
+					},
+					"quantity": {
+						"type": "number",
+						"description": "Quantity to order",
+						"example": 2,
+						"minimum": 1
+					}
+				},
+				"required": [
+					"product_id",
+					"quantity"
+				]
+			},
+			"CreateOrderDto": {
+				"type": "object",
+				"properties": {
+					"customer_id": {
+						"type": "object",
+						"description": "Customer ID (optional for walk-in customers)",
+						"example": 1,
+						"nullable": true
+					},
+					"notes": {
+						"type": "object",
+						"description": "Order notes",
+						"example": "Extra hot, no foam",
+						"nullable": true
+					},
+					"items": {
+						"description": "Order items",
+						"example": [
+							{
+								"product_id": 1,
+								"quantity": 2
+							},
+							{
+								"product_id": 3,
+								"quantity": 1
+							}
+						],
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/CreateOrderItemDto"
+						}
+					}
+				},
+				"required": [
+					"items"
+				]
+			},
+			"Order": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number",
+						"description": "Order ID",
+						"example": 1
+					},
+					"order_number": {
+						"type": "string",
+						"description": "Unique order number",
+						"example": "ORD-2024-001"
+					},
+					"status": {
+						"type": "string",
+						"description": "Order status",
+						"example": "PENDING",
+						"enum": [
+							"PENDING",
+							"CONFIRMED",
+							"PREPARING",
+							"READY",
+							"COMPLETED",
+							"CANCELLED"
+						]
+					},
+					"total_amount": {
+						"type": "number",
+						"description": "Total order amount",
+						"example": 24.99
+					},
+					"notes": {
+						"type": "object",
+						"description": "Order notes",
+						"example": "No sugar in the cappuccino please",
+						"nullable": true
+					},
+					"customer_id": {
+						"type": "object",
+						"description": "Customer ID",
+						"example": 1,
+						"nullable": true
+					},
+					"created_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Creation timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					},
+					"updated_at": {
+						"format": "date-time",
+						"type": "string",
+						"description": "Last update timestamp",
+						"example": "2024-01-01T00:00:00.000Z"
+					}
+				},
+				"required": [
+					"id",
+					"order_number",
+					"status",
+					"total_amount",
+					"created_at",
+					"updated_at"
+				]
+			},
+			"PaginatedOrdersResponseDto": {
+				"type": "object",
+				"properties": {
+					"data": {
+						"description": "Array of orders",
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/Order"
+						}
+					},
+					"meta": {
+						"description": "Pagination metadata",
+						"allOf": [
+							{
+								"$ref": "#/components/schemas/PaginationMetaDto"
+							}
+						]
+					}
+				},
+				"required": [
+					"data",
+					"meta"
+				]
+			},
+			"UpdateOrderDto": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"description": "Order status",
+						"enum": [
+							"PENDING",
+							"CONFIRMED",
+							"PREPARING",
+							"READY",
+							"COMPLETED",
+							"CANCELLED"
+						],
+						"example": "CONFIRMED"
+					},
+					"notes": {
+						"type": "string",
+						"description": "Order notes",
+						"example": "Customer requests extra napkins"
+					}
+				},
+				"required": [
+					"status",
+					"notes"
+				]
+			}
+		}
+	}
+}

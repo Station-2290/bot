@@ -1,0 +1,222 @@
+name: Bot CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**'
+      - '!README.md'
+      - '!*.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**'
+      - '!README.md'
+      - '!*.md'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/bot
+
+jobs:
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate API types
+        run: pnpm run gen:api
+
+      - name: Run linter
+        run: pnpm run lint
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: Test build
+        run: pnpm run build
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Set variables
+            export IMAGE_NAME="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
+            export SERVICE_NAME="coffee-shop-bot"
+            export CONTAINER_NAME="coffee-shop-bot"
+            export HOST_PORT="3002"
+            export CONTAINER_PORT="3000"
+            
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            
+            # Pull latest image
+            docker pull $IMAGE_NAME
+            
+            # Stop and remove existing container
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            
+            # Run new container with health check
+            docker run -d \
+              --name $CONTAINER_NAME \
+              --restart unless-stopped \
+              -p $HOST_PORT:$CONTAINER_PORT \
+              -e NODE_ENV=production \
+              -e API_URL="${{ secrets.API_URL }}" \
+              -e WHATSAPP_SESSION_SECRET="${{ secrets.WHATSAPP_SESSION_SECRET }}" \
+              -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+              -e GOOGLE_APPLICATION_CREDENTIALS="${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" \
+              -v bot_sessions:/app/sessions \
+              --health-cmd="wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1" \
+              --health-interval=30s \
+              --health-timeout=10s \
+              --health-retries=3 \
+              $IMAGE_NAME
+            
+            # Wait for health check
+            echo "Waiting for service to be healthy..."
+            timeout=60
+            while [ $timeout -gt 0 ]; do
+              if docker inspect --format='{{.State.Health.Status}}' $CONTAINER_NAME | grep -q "healthy"; then
+                echo "✅ Service is healthy!"
+                break
+              fi
+              echo "⏳ Waiting for health check... ($timeout seconds left)"
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            
+            if [ $timeout -le 0 ]; then
+              echo "❌ Health check failed, rolling back..."
+              docker logs $CONTAINER_NAME --tail 50
+              exit 1
+            fi
+            
+            # Cleanup old images (keep last 3)
+            docker images ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --format "table {{.Repository}}:{{.Tag}}\t{{.CreatedAt}}" | tail -n +2 | sort -k2 -r | tail -n +4 | awk '{print $1}' | xargs -r docker rmi || true
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Final verification
+            if docker ps | grep -q "coffee-shop-bot"; then
+              echo "✅ Deployment successful!"
+              docker ps | grep coffee-shop-bot
+            else
+              echo "❌ Deployment failed!"
+              exit 1
+            fi
+
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    if: always()
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Bot deployment completed successfully"
+          else
+            echo "❌ Bot deployment failed"
+          fi

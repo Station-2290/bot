@@ -1,0 +1,6 @@
+dist
+node_modules
+__generated__
+.env
+!.env.example
+*.log

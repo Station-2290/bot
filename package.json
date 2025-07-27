@@ -1,0 +1,52 @@
+{
+  "name": "@coffee-shop/bot",
+  "version": "1.0.0",
+  "description": "WhatsApp and Telegram bot for Coffee Shop order management",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "test": "jest",
+    "gen:api": "openapi-typescript __schemas__/openapi.json -o src/types/api.types.ts"
+  },
+  "keywords": [
+    "whatsapp",
+    "telegram",
+    "bot",
+    "coffee-shop"
+  ],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.5.2",
+  "dependencies": {
+    "@google-cloud/speech": "^7.2.0",
+    "@types/form-data": "^2.5.2",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "form-data": "^4.0.4",
+    "kokoro-js": "^1.2.1",
+    "openai": "^5.10.2",
+    "openapi-fetch": "^0.14.0",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.31.0",
+    "winston": "^3.17.0",
+    "xstate": "^5.20.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
+    "jest": "^30.0.5",
+    "nodemon": "^3.1.10",
+    "openapi-typescript": "^7.8.0",
+    "ts-jest": "^29.4.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
