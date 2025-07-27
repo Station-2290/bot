@@ -15,7 +15,7 @@ interface HealthStatus {
 }
 
 // Basic health check
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   const health: HealthStatus = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -32,7 +32,7 @@ router.get('/health', (req, res) => {
 });
 
 // Detailed health check
-router.get('/health/detailed', (req, res) => {
+router.get('/health/detailed', (_req, res) => {
   const health = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
