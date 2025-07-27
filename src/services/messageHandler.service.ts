@@ -10,33 +10,25 @@ export class MessageHandlerService {
   private services = {
     createCustomer: async ({ input }: { input: any }) => {
       const { userId, customerInfo } = input;
-      try {
-        const customer = await coffeeShopApi.createCustomer({
-          email: customerInfo.email,
-          first_name: customerInfo.firstName,
-          last_name: customerInfo.lastName,
-          phone: userId,
-        });
-        return customer;
-      } catch (error) {
-        throw error;
-      }
+      const customer = await coffeeShopApi.createCustomer({
+        email: customerInfo.email,
+        first_name: customerInfo.firstName,
+        last_name: customerInfo.lastName,
+        phone: userId,
+      });
+      return customer;
     },
     placeOrder: async ({ input }: { input: any }) => {
       const { customer, cart } = input;
-      try {
         const orderData = {
           customer_id: customer?.id,
           items: cart.map((item: any) => ({
             product_id: item.product.id,
             quantity: item.quantity,
-          })),
-        };
-        const order = await coffeeShopApi.createOrder(orderData);
-        return order;
-      } catch (error) {
-        throw error;
-      }
+        })),
+      };
+      const order = await coffeeShopApi.createOrder(orderData);
+      return order;
     },
   };
 
@@ -284,7 +276,7 @@ export class MessageHandlerService {
     
     await whatsappService.sendTextMessage(
       userId,
-      `Thanks ${firstName}! What\'s your email address?`
+      `Thanks ${firstName}! What's your email address?`
     );
   }
 
