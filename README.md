@@ -1,6 +1,6 @@
-# ☕ Coffee Shop WhatsApp Bot
+# ☕ Station2290 WhatsApp Bot
 
-A comprehensive WhatsApp Business chatbot for the Coffee Shop that enables customers to browse the menu, place orders, and receive assistance through natural language processing and voice message support.
+A comprehensive WhatsApp Business chatbot for Station2290 coffee shop that enables customers to browse the menu, place orders, and receive assistance through natural language processing and voice message support. Part of the Station2290 microservices ecosystem.
 
 ## 🌟 Features
 
@@ -61,30 +61,70 @@ bot/
 └── dist/               # Compiled JavaScript
 ```
 
+## 🏗️ Station2290 Architecture
+
+### Microservices Ecosystem
+
+This WhatsApp bot is part of the Station2290 coffee shop management system:
+
+- **Infrastructure**: [Station2290-Infrastructure](https://github.com/Station-2290/infrastructure)
+- **API Backend**: [Station2290-API](https://github.com/Station-2290/api)
+- **Customer Website**: [Station2290-Web](https://github.com/Station-2290/web)
+- **WhatsApp Bot**: [Station2290-Bot](https://github.com/Station-2290/bot) (this repository)
+- **Admin Panel**: [Station2290-Adminka](https://github.com/Station-2290/adminka)
+- **Order Panel**: [Station2290-Order-Panel](https://github.com/Station-2290/order-panel)
+
+### 🔄 Automatic Deployment
+
+This bot **deploys automatically** when you push to the `main` branch:
+
+1. **GitHub Actions** builds the Node.js application
+2. **Creates** optimized Docker image with dependencies
+3. **Deploys** to production VPS via SSH
+4. **Health checks** ensure bot webhook is responding
+5. **Session persistence** maintains customer conversations
+
+**Production Webhook**: https://bot.station2290.ru
+
 ## 🚀 Quick Start
 
 ### Prerequisites
+
+**For Local Development:**
 - Node.js 18+
 - pnpm package manager
-- WhatsApp Business Account
+- WhatsApp Business Account and API access
 - OpenAI API Key
 - Google Cloud account with Speech-to-Text API
-- Running Coffee Shop API
+- Access to Station2290 API (local or remote)
 
-### Installation
+**For Production Deployment:**
+- Infrastructure repository deployed on VPS
+- GitHub Secrets configured for automated deployment
+- WhatsApp Business API webhook configured
 
-1. **Clone and install dependencies**
+### Local Development Setup
+
+1. **Clone the repository:**
 ```bash
+git clone https://github.com/Station-2290/bot.git
 cd bot
+```
+
+2. **Install dependencies:**
+```bash
 pnpm install
 ```
 
-2. **Environment Setup**
+3. **Environment Setup:**
 ```bash
 cp .env.example .env
+# Edit .env with your local configuration
 ```
 
-3. **Configure environment variables**
+4. **Configure environment variables:**
+
+**Local Development:**
 ```bash
 # WhatsApp Business API
 WHATSAPP_BUSINESS_API_URL=https://graph.facebook.com/v18.0
@@ -93,8 +133,8 @@ WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id
 WHATSAPP_ACCESS_TOKEN=your_access_token
 WHATSAPP_WEBHOOK_VERIFY_TOKEN=your_webhook_verify_token
 
-# Coffee Shop API
-COFFEE_SHOP_API_URL=http://localhost:3000/api/v1
+# Station2290 API
+API_URL=http://localhost:3000/api/v1
 COFFEE_SHOP_API_KEY=your_api_key
 
 # OpenAI
